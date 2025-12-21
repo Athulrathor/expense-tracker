@@ -45,6 +45,12 @@ const User = sequelize.define(
       comment: 'URL or path to user avatar image',
     },
 
+    avatarId: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      comment: 'Unique identifier for the avatar in the storage service',
+    },
+
     avatarColor: {
       type: DataTypes.STRING(7),
       allowNull: true,
@@ -62,9 +68,10 @@ const User = sequelize.define(
       beforeCreate: (user, options) => {
         if (!user.avatar) {
           user.avatarColor = generateAvatarColor(user.id);
+          user.avatarId = null;
         }
       },
-      beforeUpdate: (user, options) => {
+      afterCreate: (user, options) => {
         if (user.changed('avatar')) {
           if (user.avatar) {
             user.avatarColor = null;

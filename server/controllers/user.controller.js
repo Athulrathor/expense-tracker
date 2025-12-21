@@ -2,6 +2,8 @@ const User = require('../models/user.model.js');
 const bcrypt = require('bcrypt');
 const { generateToken } = require('../utils/jwt.utils.js');
 const { getCookieOptions } = require('../utils/cookiParserOptions.utils.js');
+const { uploadFile, deleteFile } = require('../services/imageKit.services.js');
+const { generateAvatarColor } = require('../utils/manageAvatarColor.utils.js');
 
 const registerUser = async (req, res) => {
 
@@ -123,9 +125,19 @@ const uploadProfilePicture = async (req, res) => {
         
         if (!profilePic) return res.status(400).json({ message: 'No file uploaded', success: false });
 
+        const uploadedImage = await uploadFile(profilePic);
 
+        if (!uploadedImage || !uploadedImage.url) {
+            return res.status(500).json({ message: 'Failed to upload image', success: false });
+        }
 
-        res.status(200).json({ message: 'File uploaded', filename: profilePic.filename, path: `/uploads/${profilePic.filename}`, success: true });
+        const updatedUser = await User.update({ avatar: uploadedImage.url, avatarId: uploadedImage.fileId, avatarColor: null }, { where: { id: userId } });
+
+        if (!updatedUser) {
+            return res.status(500).json({message: "Error in Updating Avatar Image!"})
+        }
+
+        res.status(200).json({ message: 'File uploaded', avatarId: uploadedImage.fileId, thumnailUrl: uploadedImage.thumbnailUrl, filename: uploadedImage.name,url: uploadedImage.url, path: uploadedImage.filePath, success: true });
 
     } catch (error) {
         console.error('Profile picture upload error: ', error);
@@ -137,9 +149,62 @@ const uploadProfilePicture = async (req, res) => {
     
 };
 
+const removeProfilePicture = async (req, res) => {
+
+    const userId = req.user.id;
+    const imageId = req.user.avatarId;
+
+    try {
+
+        deleteFile(imageId);
+
+        const updatedUser = await User.update({ avatar: null, avatarId: null, avatarColor: generateAvatarColor(userId)}, { where: { id: userId } });
+
+        if (!updatedUser) {
+            return res.status(500).json({ message: "Error in Deleting Avatar Image!" })
+        }
+
+        res.status(200).json({ message: 'File Removed', avatarColor: updatedUser.avatarColor, success: true });
+
+    } catch (error) {
+        console.error(' Remove profile error: ', error);
+        res.status(500).json({
+            message: 'Internal Server Error!',
+            error: error.message
+        });
+    }
+
+};
+
+const updateUserEmail = async (req, res) => {
+    const userId = req.user.id;
+
+    const { email } = req.body;
+
+    try {
+
+        const updatedUser = await User.update({ email: email }, { where: { id: userId } });
+
+        if (!updatedUser) {
+            return res.status(500).json({ message: "Error in Updating User Details!" })
+        }
+
+        res.status(200).json({ message: 'User Detail Updated!', user: updatedUser, success: true });
+
+    } catch (error) {
+        console.error('User profile update error: ', error);
+        res.status(500).json({
+            message: 'Internal Server Error!',
+            error: error.message
+        });
+    }
+};
+
 module.exports = {
     registerUser,
     validateUser,
     logoutUser,
     uploadProfilePicture,
+    removeProfilePicture,
+    updateUserEmail
 };
