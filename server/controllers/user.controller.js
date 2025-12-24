@@ -4,6 +4,7 @@ const { generateToken } = require('../utils/jwt.utils.js');
 const { getCookieOptions } = require('../utils/cookiParserOptions.utils.js');
 const { uploadFile, deleteFile } = require('../services/imageKit.services.js');
 const { generateAvatarColor } = require('../utils/manageAvatarColor.utils.js');
+const { sendVerificationEmail } = require('../utils/manageMailVerification.utils.js');
 
 const registerUser = async (req, res) => {
 
@@ -200,11 +201,104 @@ const updateUserEmail = async (req, res) => {
     }
 };
 
+const verificationMailSend = async (req, res) => {
+
+    const { email } = req.body;
+
+    try {
+
+        if (!email) {
+            return res.status(401).json({ message: "Email not found!" });
+        }
+
+        const user = await User.findOne({ where: { email: email } });
+
+        if (!user) {
+            return res.status(401).json({ message: "User not found!" });
+        }
+
+        const otpMailSends = sendVerificationEmail(channel = "email", email);
+
+        if (!otpMailSends.status) {
+            return res.status(401).json({ message: "Issue in sending otp mail!" });
+        }
+
+        return res.status(200).json({ message: "Verification mail send successfully!", mailObject: otp, success: true });
+        
+    } catch (error) {
+        console.error('Forget Password Error: ', error);
+        res.status(500).json({
+            message: 'Internal Server Error!',
+            error: error.message
+        });
+    }
+};
+
+const verificationMailVerify = async (req, res) => {
+
+    const { email, otp } = req.body;
+
+    try {
+
+        if (!email || !otp) {
+            return res.status(400).json({ error: 'Email and code are required' });
+        }
+
+        const result = await verifyCode(email, otp);
+
+        if (result.success) {
+            res.json({ message: 'Email verified successfully', status: result.status });
+        } else {
+            res.status(400).json({ error: 'Invalid or expired code', status: result.status });
+        }
+        
+    } catch (error) {
+        console.error('Forget Password Verification Error: ', error);
+        res.status(500).json({
+            message: 'Internal Server Error!',
+            error: error.message
+        });
+    }
+};
+
+const forgetPasswordChange = async (req, res) => {
+
+    const { password } = req.body;
+
+    try {
+
+        if (!password) {
+            return res.status(400).json({ message: "User Password Not Found!" });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const passwordUpdated = await User.update({ password: hashedPassword }, { where: { id: req.user.id } });
+        
+        if (!passwordUpdated) {
+            return res.status(403).json({ message: "Error in updating Paswords!" });
+        }
+
+        return res.status(200).json({ message: "Password changed Successfully!", success: true });
+        
+    } catch (error) {
+        console.error('Password Change Error: ', error);
+        res.status(500).json({
+            message: 'Internal Server Error!',
+            error: error.message
+        });
+    }
+};
+
+
 module.exports = {
     registerUser,
     validateUser,
     logoutUser,
     uploadProfilePicture,
     removeProfilePicture,
-    updateUserEmail
+    updateUserEmail,
+    verificationMailSend,
+    verificationMailVerify,
+    forgetPasswordChange
 };
