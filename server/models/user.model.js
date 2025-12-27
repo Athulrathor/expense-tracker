@@ -29,14 +29,10 @@ const User = sequelize.define(
       allowNull: false,
     },
 
-    otpReset: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-    },
-
-    otpExpiry: {
-      type: DataTypes.DATE,
-      allowNull: true,
+    isEmailVerified: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      allowNull: false,
     },
 
     avatar: {
