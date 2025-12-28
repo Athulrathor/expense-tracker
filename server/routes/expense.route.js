@@ -1,9 +1,17 @@
 const { Router } = require("express");
-const { registerExpense } = require('../controllers/expenses.controller.js');
+const { registerExpense, getAllExpense, UpdateExpense, deleteExpense } = require('../controllers/expenses.controller.js');
 const { verifyToken } = require('../middleware/authentication.middleware.js');
 
 const router = Router();
 
-router.route("/register").post(verifyToken, registerExpense);
+router.use(verifyToken);
+
+router.route("/register").post(registerExpense);
+
+router.get("/get-expenses", getAllExpense);
+
+router.put("/:id", UpdateExpense);
+
+router.delete("/:id", deleteExpense);
 
 module.exports = router;

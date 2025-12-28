@@ -49,6 +49,7 @@ const Expense = sequelize.define(
     date: {
       type: DataTypes.DATE,
       allowNull: false,
+      defaultValue: Date.now,
     },
   },
   {

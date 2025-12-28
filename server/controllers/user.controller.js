@@ -144,7 +144,6 @@ const finalRegisteration = async (req, res) => {
     }
 };    
    
-
 const validateUser = async (req, res) => {
     const { email, password } = req.body;
 
