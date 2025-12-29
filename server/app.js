@@ -21,11 +21,15 @@ const testRouter = require("./routes/test.route.js");
 const userRouter = require('./routes/user.route.js');
 const expenseRouter = require('./routes/expense.route.js');
 const incomeRouter = require('./routes/income.route.js');
+const budgetRouter = require('./routes/budget.route.js');
+const categoryRouter = require('./routes/category.route.js');
 
 //Routers
 app.use("/api/v1/test", testRouter);
 app.use('/api/v1/user', userRouter);
 app.use('/api/v1/expense', expenseRouter);
 app.use('/api/v1/income', incomeRouter);
+app.use('./api/v1/category',categoryRouter);
+app.use('/api/v1/budget',budgetRouter);
 
 module.exports = app;

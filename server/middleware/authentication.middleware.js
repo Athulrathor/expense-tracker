@@ -6,14 +6,14 @@ const verifyToken = async (req, res, next) => {
     try {
 
         const token =
-            req.cookies?.token ||
+            req.cookies?.accessToken ||
             req.header("Authorization")?.replace("Bearer ", "");
 
         if (!token) {
             return res.status(401).json({ message: "Unauthorized request!"});
         }
 
-        const decodedAccessToken = verifyJWTToken(token);
+        const decodedAccessToken = verifyJWTToken(accessToken,type = "access");
 
         if (!decodedAccessToken) {
             return res.status(401).json({ message: "Invalid access token!" });

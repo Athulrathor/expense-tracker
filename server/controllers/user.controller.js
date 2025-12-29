@@ -1,6 +1,6 @@
 const User = require('../models/user.model.js');
 const bcrypt = require('bcrypt');
-const { generateToken } = require('../utils/jwt.utils.js');
+const { generateAccessToken,generateRefreshToken, verifyJWTToken } = require('../utils/jwt.utils.js');
 const { getCookieOptions } = require('../utils/cookiParserOptions.utils.js');
 const { uploadFile, deleteFile } = require('../services/imageKit.services.js');
 const { generateAvatarColor } = require('../utils/manageAvatarColor.utils.js');
@@ -116,11 +116,11 @@ const finalRegisteration = async (req, res) => {
             isEmailVerified: true,
         });
 
-        const token = generateToken(newUser.id);
+        // const token = generateToken(newUser.id);
 
         return res
             .status(201)
-            .cookie('token', token, getCookieOptions())
+            // .cookie('token', token, getCookieOptions())
             .json({
                 success: true,
                 message: "User registered successfully!",
@@ -142,7 +142,34 @@ const finalRegisteration = async (req, res) => {
             ...(process.env.NODE_ENV === 'development' && { error: error.message })
         });
     }
-};    
+};
+
+const resetRefreshToken = async (req,res) => {
+
+    const token = req.cookies.refreshToken;
+
+    if (!token) return res.status(401);
+
+    let payload;
+
+    try {
+        payload = verifyJWTToken(token,type = "refresh");
+    } catch {
+        return res.status(403);
+    }
+
+    const user = await User.findByPk(payload.id);
+
+    if (!user || !user.refreshToken) return res.status(403);
+
+    const match = await bcrypt.compare(token, user.refreshToken);
+
+    if (!match) return res.status(403);
+
+    const newAccessToken = generateAccessToken(user);
+
+    res.json({ accessToken: newAccessToken });
+};
    
 const validateUser = async (req, res) => {
     const { email, password } = req.body;
@@ -175,13 +202,18 @@ const validateUser = async (req, res) => {
             attributes: { exclude: ['password'] }
         });
 
-        const token = generateToken(user.id);
+        const accessToken = generateAccessToken(user);
+        const refreshToken = generateRefreshToken(user);
+
+        newUser.refreshToken = await bcrypt.hash(refreshToken, 10);
+        
+        await newUser.save();
 
         return res
             .status(200)
-            .cookie('token', token, getCookieOptions())
+            .cookie('refreshToken', refreshToken, getCookieOptions())
             .json(
-                { message: "User loggedin successfully!", token: token, user: loggedUser, success: true }
+                { message: "User loggedin successfully!", accessToken: accessToken, user: loggedUser, success: true }
             );
 
     } catch (error) {
@@ -193,10 +225,22 @@ const validateUser = async (req, res) => {
 const logoutUser = async (req, res) => {
     try {
 
-        res.clearCookie('token', getCookieOptions());
+        const token = req.cookie.refreshToken;
 
-        return res.status(200).json({
-            message: "Logout successful!"
+        if (token) {
+            const user = await User.findOne(req.user.id);
+            if (user) {
+                user.refreshToken = null;
+                await user.save();
+            }
+        }
+
+        res.clearCookie('accessToken', getCookieOptions());
+        res.clearCookie('refreshToken', getCookieOptions());
+
+        return res.status(204).json({
+            message: "Logout successful!",
+            success: true,
         });
     } catch (error) {
         console.error('Logout error: ', error);
@@ -533,5 +577,6 @@ module.exports = {
     verificationMailSend,
     verificationMailVerify,
     forgetPasswordChange,
-    resendOtp
+    resendOtp,
+    resetRefreshToken
 };

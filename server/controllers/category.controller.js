@@ -85,6 +85,27 @@ const getAllCategory = async (req,res) => {
     }
 };
 
+const getCategoryById = async (req,res) => {
+    const {categoryId} = req.params;
+
+    try {
+
+        if (!categoryId) return res.status(400).json({message: "Category Id Not Found!",success: false});
+    
+        const category = await Category.findByPk(categoryId);
+
+        if (!category) {
+            return res.status(401).json({message: "Category Not Found!",success: false});
+        }
+
+        return res.status(200).json({message: "Category By Id Fetched Successfully!",category,success: true});
+        
+    } catch (error) {
+        console.error('Get Category By Id Error:', error);
+        res.status(500).json({ message: 'Internal Server Error!', error: error.message });
+    }
+};
+
 const updateCategory = async (req,res) => {
     const {name,type} = req.body;
     const userId = req.user.id;
@@ -92,7 +113,7 @@ const updateCategory = async (req,res) => {
 
     try {
 
-        if (!categoryId) return res.status(400).json({message: "Income Id Not Found!",success: false});
+        if (!categoryId) return res.status(400).json({message: "Category Id Not Found!",success: false});
 
         if (!name || !type) {
             return res.status(400).json({message: "Name and Type Are Compulsary!",success: false});
@@ -138,5 +159,6 @@ module.exports = {
     registerCategory,
     getAllCategory,
     updateCategory,
-    deleteCategory
+    deleteCategory,
+    getCategoryById
 };

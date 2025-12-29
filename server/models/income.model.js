@@ -15,19 +15,11 @@ const Income = sequelize.define(
     user_id: {
       type: DataTypes.UUID,
       allowNull: false,
-      // references: {
-      //   model: 'User',
-      //   key: 'id'
-      // },
     },
 
     category_id: {
       type: DataTypes.UUID,
       allowNull: false,
-      // references: {
-      //   model:'Category',
-      //   key: 'id',
-      // }
     },
 
     amount: {

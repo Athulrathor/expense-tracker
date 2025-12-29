@@ -36,14 +36,22 @@ const Expense = sequelize.define(
       // onUpdate: 'CASCADE',
     },
 
-    amount: {
-      type: DataTypes.DECIMAL(10, 2),
+    receipt: { type: DataTypes.STRING,
+      allowNull: true,
+    },
+type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
+    amount: {
+      
     },
 
     description: {
       type: DataTypes.STRING,
       allowNull: true,
+    },
+
+    receipt: {
+      type: DataTypes.STRING
     },
 
     date: {

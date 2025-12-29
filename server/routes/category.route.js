@@ -1,6 +1,6 @@
 const express = require("express");
 const {verifyToken} = require("../middleware/authentication.middleware.js");
-const {registerCategory, getAllCategory, updateCategory, deleteCategory} = require("../controllers/category.controller.js");
+const {registerCategory, getAllCategory, updateCategory, deleteCategory, getCategoryById} = require("../controllers/category.controller.js");
 
 
 const router = express.Router();
@@ -8,6 +8,8 @@ const router = express.Router();
 router.use(verifyToken);
 
 router.post("/register", registerCategory);
+
+router.get("/:id", getCategoryById);
 
 router.get("/get-categories", getAllCategory);
 
