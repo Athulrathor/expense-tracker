@@ -2,7 +2,6 @@ const { Router } = require("express");
 const {verifyToken} = require('../middleware/authentication.middleware.js');
 const { registerBudget, getBudgetById, getAllBudget, UpdateBudget, deleteBudget, getBudgetProgress } = require("../controllers/budget.controller.js");
 
-
 const router = Router();
 
 router.use(verifyToken);

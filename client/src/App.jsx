@@ -1,8 +1,9 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import './App.css';
 
 //pages imports 
-import HomePage from './pages/HomePage';
-import LandingPage from './pages/landingPage';
+import HomePage from './pages/Dashboard';
+import LandingPage from './pages/LandingPage';
 import NoPage from './pages/noPage';
  
 
